@@ -1,0 +1,22 @@
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+
+ingester:
+  chunk_idle_period: 1h
+  chunk_block_size: 262144
+  max_chunk_size: 1048576
+  max_entries_limit: 5000
+  retention_period: 7d
+  flush_check_period: 1m
+  flush_queue_size: 10000
+
+schema_config:
+  configs:
+    - from: 2020-10-20
+      store: boltdb-shipper
+      schema: v11
+      index:
+        prefix: index_
+        period: 168h

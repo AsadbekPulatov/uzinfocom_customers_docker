@@ -6,7 +6,7 @@ services:
     networks:
       - my_network
     ports:
-      - "8000:80"
+      - "9000:80"
     volumes:
       - ./src:/var/www/html
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
@@ -25,8 +25,12 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: uzinfocom
-#      MYSQL_USER: root
-#      MYSQL_PASSWORD: password
+#     MYSQL_USER: root
+#     MYSQL_PASSWORD: password
+#    volumes:
+#      - ./docker/volumes/mysql:/var/lib/mysql
+
+
 
   php:
     build:
@@ -57,7 +61,7 @@ services:
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
-    container_name: customer_phpmyadmin
+    container_name: laravel_phpmyadmin
     restart: always
     ports:
       - "8888:80"
@@ -68,6 +72,61 @@ services:
 #      PMA_PASSWORD: password
     depends_on:
       -   mysql
+    networks:
+      - my_network
+
+
+  loki:
+    image: grafana/loki:latest
+    container_name: laravel_loki
+    ports:
+      - "3100:3100"
+#    volumes:
+#      - ./docker/grafana/loki-config.yml:/etc/loki/loki.yml
+    command: -config.file=/etc/loki/local-config.yaml
+#    command: -config.file=/etc/loki/docker-config.yml
+    networks:
+      - my_network
+
+  prom-tail:
+    image: grafana/promtail:v1.3.0
+    container_name: laravel_promtail
+    #    volumes:
+    #      - ./docker/grafana/promtail-config.yml:/etc/promtail/config.yml
+    command: -config.file=/etc/promtail/docker-config.yaml
+    networks:
+      - my_network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: laravel_grafana
+    volumes:
+      - ./:/var/www/html
+    environment:
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    entrypoint:
+      - sh
+      - -euc
+      - |
+        mkdir -p /etc/grafana/provisioning/datasources
+        cat <<EOF > /etc/grafana/provisioning/datasources/ds.yaml
+        apiVersion: 1
+        datasources:
+        - name: Loki
+          type: loki
+          access: proxy 
+          orgId: 1
+          url: http://loki:3100
+          basicAuth: false
+          isDefault: true
+          version: 1
+          editable: false
+        EOF
+        /run.sh
+    ports:
+      - "3000:3000"
     networks:
       - my_network
 
