@@ -43,7 +43,6 @@ services:
       - ./src:/var/www/html
 
     ports:
-      - "8001:80"
       - "6001:6001"
       - "5173:5173"
 
@@ -54,7 +53,7 @@ services:
       && php artisan migrate
       && php artisan cache:clear
       && php artisan optimize:clear
-      && docker-php-entrypoint php-fpm
+      && supervisord -c /etc/supervisor/conf.d/supervisord.conf
       "
     depends_on:
       - mysql
