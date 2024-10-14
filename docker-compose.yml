@@ -9,11 +9,16 @@ services:
       - "9000:80"
     volumes:
       - ./src:/var/www/html
+      - ./docker/nginx/.htpasswd:/etc/apache2/.htpasswd
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
     links:
       - php
+      - php_2
+      - php_3
     depends_on:
       - php
+      - php_2
+      - php_3
 
   mysql:
     image: mysql:8.0
@@ -57,6 +62,49 @@ services:
       "
     depends_on:
       - mysql
+
+  php_2:
+    build:
+      context: .
+      dockerfile: ./docker/php/Dockerfile
+    container_name: laravel_php_2
+    networks:
+      - my_network
+    volumes:
+      - ./src:/var/www/html
+
+    ports:
+      - "6002:6001"
+      - "5174:5173"
+
+    command: >
+      bash -c "true
+      && supervisord -c /etc/supervisor/conf.d/supervisord.conf
+      "
+    depends_on:
+      - mysql
+
+  php_3:
+    build:
+      context: .
+      dockerfile: ./docker/php/Dockerfile
+    container_name: laravel_php_3
+    networks:
+      - my_network
+    volumes:
+      - ./src:/var/www/html
+
+    ports:
+      - "6003:6001"
+      - "5175:5173"
+
+    command: >
+      bash -c "true
+      && supervisord -c /etc/supervisor/conf.d/supervisord.conf
+      "
+    depends_on:
+      - mysql
+
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
