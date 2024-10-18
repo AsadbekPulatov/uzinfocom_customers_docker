@@ -177,6 +177,18 @@ services:
     networks:
       - my_network
 
+  rabbit:
+    image: rabbitmq:4.0-management
+    container_name: laravel_rabbitmq
+    restart: always
+    volumes:
+      - ./src:/var/www/html
+    networks:
+      - my_network
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
 networks:
   my_network:
     driver: bridge
