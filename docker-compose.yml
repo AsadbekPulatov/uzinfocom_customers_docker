@@ -14,11 +14,9 @@ services:
     links:
       - php
       - php_2
-      - php_3
     depends_on:
       - php
       - php_2
-      - php_3
 
   mysql:
     image: mysql:8.0
@@ -83,28 +81,6 @@ services:
       "
     depends_on:
       - mysql
-
-  php_3:
-    build:
-      context: .
-      dockerfile: ./docker/php/Dockerfile
-    container_name: laravel_php_3
-    networks:
-      - my_network
-    volumes:
-      - ./src:/var/www/html
-
-    ports:
-      - "6003:6001"
-      - "5175:5173"
-
-    command: >
-      bash -c "true
-      && supervisord -c /etc/supervisor/conf.d/supervisord.conf
-      "
-    depends_on:
-      - mysql
-
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
@@ -189,6 +165,34 @@ services:
       - "5672:5672"
       - "15672:15672"
 
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.3
+    container_name: laravel_es
+    environment:
+      - node.name=laravel_es
+      - cluster.name=es_docker_cluster
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=false
+    networks:
+      - my_network
+    ports:
+      - "9200:9200"
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.15.3
+    container_name: laravel_kibana
+    links:
+      - elasticsearch
+    environment:
+      - node.name=laravel_kibana
+      - cluster.name=es_docker_cluster
+      - ELASTICSEARCH_HOSTS=http://laravel_es:9200/
+    networks:
+      - my_network
+    ports:
+      - "5601:5601"
 networks:
   my_network:
     driver: bridge
