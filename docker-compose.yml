@@ -30,7 +30,8 @@ services:
       MYSQL_DATABASE: uzinfocom
 #     MYSQL_USER: root
 #     MYSQL_PASSWORD: password
-#    volumes:
+    volumes:
+      - ./docker/data/init.sql:/docker-entrypoint-initdb.d/init.sql
 #      - ./docker/volumes/mysql:/var/lib/mysql
 
 
